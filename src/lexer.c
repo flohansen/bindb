@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Lexer* create_lexer(char* input) {
-    struct Lexer* lexer = (struct Lexer*)malloc(sizeof(struct Lexer));
-    memset(lexer, 0, sizeof(struct Lexer));
+Lexer* create_lexer(char* input) {
+    Lexer* lexer = (Lexer*)malloc(sizeof(Lexer));
+    memset(lexer, 0, sizeof(Lexer));
 
     lexer->input = input;
     lexer->position = 0;
@@ -14,7 +14,7 @@ struct Lexer* create_lexer(char* input) {
     return lexer;
 }
 
-bool lexer_next(struct Lexer* lexer, struct Token* token) {
+bool lexer_next(Lexer* lexer, Token* token) {
     char c;
     if (!lexer_next_char(lexer, &c)) {
         return false;
@@ -31,13 +31,13 @@ bool lexer_next(struct Lexer* lexer, struct Token* token) {
     return true;
 }
 
-void set_token(struct Token* token, enum TokenType type, char c) {
+void set_token(Token* token, TokenType type, char c) {
     token->type = type;
     token->value = (char*)calloc(2, sizeof(char));
     memset(token->value, c, 1);
 }
 
-bool lexer_next_char(struct Lexer* lexer, char* c) {
+bool lexer_next_char(Lexer* lexer, char* c) {
     if (lexer->position >= lexer->length) {
         return false;
     }
@@ -47,7 +47,7 @@ bool lexer_next_char(struct Lexer* lexer, char* c) {
     return true;
 }
 
-bool lexer_peek_char(struct Lexer* lexer, char* c) {
+bool lexer_peek_char(Lexer* lexer, char* c) {
     if (lexer->position >= lexer->length) {
         return false;
     }
@@ -56,9 +56,9 @@ bool lexer_peek_char(struct Lexer* lexer, char* c) {
     return true;
 }
 
-struct Token lexer_parse_literal(struct Lexer* lexer, char c) {
-    struct Token token;
-    memset(&token, 0, sizeof(struct Token));
+Token lexer_parse_literal(Lexer* lexer, char c) {
+    Token token;
+    memset(&token, 0, sizeof(Token));
     token.type = TOKEN_LITERAL;
 
     size_t start = lexer->position;
@@ -88,10 +88,10 @@ bool is_letter(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
-void free_lexer(struct Lexer* lexer) {
+void free_lexer(Lexer* lexer) {
     free(lexer);
 }
 
-void free_token(struct Token token) {
+void free_token(Token token) {
     free(token.value);
 }

@@ -3,9 +3,9 @@
 
 int main() {
     char* input = "SELECT * FROM customers";
-    struct Lexer* lexer = create_lexer(input);
+    Lexer* lexer = create_lexer(input);
 
-    struct Token token;
+    Token token;
     while (lexer_next(lexer, &token)) {
         printf("%d: '%s'\n", token.type, token.value);
         free_token(token);
