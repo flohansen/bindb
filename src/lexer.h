@@ -37,7 +37,7 @@ struct Lexer {
  * Creates a new instance of a lexer using the input string that it should
  * tokenize. You need to call `lexer_free` after you are done with it.
  */
-struct Lexer* create_lexer(const char* input);
+bool create_lexer(struct Lexer* lexer, const char* input);
 
 /**
  * Frees the memory used by the lexer.
@@ -78,7 +78,7 @@ void lexer_parse_literal(struct Lexer* lexer);
  * Returns the current token of the lexer. You need to call `token_free` to
  * release resources.
  */
-struct Token* lexer_token(struct Lexer* lexer);
+bool lexer_token(struct Lexer* lexer, struct Token* token);
 
 /**
  * Frees the memory used by the token.

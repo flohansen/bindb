@@ -2,28 +2,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Lexer* create_lexer(const char* input) {
-    struct Lexer* lexer = (struct Lexer*)malloc(sizeof(struct Lexer));
-    if (!lexer) {
-        return NULL;
-    }
-
+bool create_lexer(struct Lexer* lexer, const char* input) {
     memset(lexer, 0, sizeof(struct Lexer));
+
     unsigned int input_len = strlen(input);
     lexer->input_len = input_len;
     lexer->input = strdup(input);
 
     if (!lexer->input) {
-        free(lexer);
-        return NULL;
+        return false;
     }
 
-    return lexer;
+    return true;
 }
 
 void lexer_free(struct Lexer* lexer) {
     free(lexer->input);
-    free(lexer);
 }
 
 bool lexer_next(struct Lexer* lexer) {
@@ -89,28 +83,22 @@ void lexer_parse_literal(struct Lexer* lexer) {
     }
 }
 
-struct Token* lexer_token(struct Lexer* lexer) {
-    struct Token* token = (struct Token*)malloc(sizeof(struct Token));
-    if (!token) {
-        return NULL;
-    }
-
+bool lexer_token(struct Lexer* lexer, struct Token* token) {
     memset(token, 0, sizeof(struct Token));
     token->type = lexer->type;
-    token->value = (char*)calloc(lexer->len, sizeof(char));
+    token->value = (char*)calloc(lexer->len+1, sizeof(char));
 
     if (!token->value) {
         free(token);
-        return NULL;
+        return false;
     }
 
     strncpy(token->value, lexer->input + lexer->start, lexer->len);
-    return token;
+    return true;
 }
 
 void token_free(struct Token* token) {
     free(token->value);
-    free(token);
 }
 
 bool is_whitespace(char c) {
