@@ -1,97 +1,122 @@
 #include "lexer.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-Lexer* create_lexer(char* input) {
-    Lexer* lexer = (Lexer*)malloc(sizeof(Lexer));
-    memset(lexer, 0, sizeof(Lexer));
+struct Lexer* create_lexer(const char* input) {
+    struct Lexer* lexer = (struct Lexer*)malloc(sizeof(struct Lexer));
+    if (!lexer) {
+        return NULL;
+    }
 
-    lexer->input = input;
-    lexer->position = 0;
-    lexer->length = strlen(input);
+    memset(lexer, 0, sizeof(struct Lexer));
+    unsigned int input_len = strlen(input);
+    lexer->input_len = input_len;
+    lexer->input = strdup(input);
+
+    if (!lexer->input) {
+        free(lexer);
+        return NULL;
+    }
 
     return lexer;
 }
 
-bool lexer_next(Lexer* lexer, Token* token) {
+void lexer_free(struct Lexer* lexer) {
+    free(lexer->input);
+    free(lexer);
+}
+
+bool lexer_next(struct Lexer* lexer) {
     char c;
     if (!lexer_next_char(lexer, &c)) {
         return false;
     }
 
-    if (is_letter(c)) {
-        *token = lexer_parse_literal(lexer, c);
+    if (is_whitespace(c)) {
+        return lexer_next(lexer);
+    } else if (is_alpha(c)) {
+        lexer_parse_literal(lexer);
     } else if (c == '*') {
-        set_token(token, TOKEN_ASTERISK, c);
+        lexer_parse_char(lexer, TOKEN_OPERATOR);
     } else {
-        set_token(token, TOKEN_UNKNOWN, c);
+        lexer_parse_char(lexer, TOKEN_UNKNOWN);
     }
 
     return true;
 }
 
-void set_token(Token* token, TokenType type, char c) {
-    token->type = type;
-    token->value = (char*)calloc(2, sizeof(char));
-    memset(token->value, c, 1);
-}
-
-bool lexer_next_char(Lexer* lexer, char* c) {
-    if (lexer->position >= lexer->length) {
+bool lexer_next_char(struct Lexer* lexer, char* c) {
+    if (lexer->pos >= lexer->input_len) {
         return false;
     }
 
-    *c = lexer->input[lexer->position];
-    lexer->position++;
+    *c = lexer->input[lexer->pos];
+    lexer->pos++;
     return true;
 }
 
-bool lexer_peek_char(Lexer* lexer, char* c) {
-    if (lexer->position >= lexer->length) {
+bool lexer_peek_char(struct Lexer* lexer, char* c) {
+    if (lexer->pos >= lexer->input_len) {
         return false;
     }
 
-    *c = lexer->input[lexer->position];
+    *c = lexer->input[lexer->pos];
     return true;
 }
 
-Token lexer_parse_literal(Lexer* lexer, char c) {
-    Token token;
-    memset(&token, 0, sizeof(Token));
-    token.type = TOKEN_LITERAL;
+void lexer_parse_char(struct Lexer* lexer, enum TokenType type) {
+    lexer->type = type;
+    lexer->start = lexer->pos-1;
+    lexer->len = 1;
+}
 
-    size_t start = lexer->position;
+void lexer_parse_literal(struct Lexer* lexer) {
+    lexer->type = TOKEN_LITERAL;
+    lexer->start = lexer->pos-1;
+    lexer->len = 1;
 
     for (;;) {
         char c;
         if (!lexer_peek_char(lexer, &c)) {
             break;
         }
-
-        if (!is_letter(c)) {
+        if (!is_alpha(c)) {
             break;
         }
 
-        lexer->position++;
+        lexer->pos++;
+        lexer->len++;
+    }
+}
+
+struct Token* lexer_token(struct Lexer* lexer) {
+    struct Token* token = (struct Token*)malloc(sizeof(struct Token));
+    if (!token) {
+        return NULL;
     }
 
-    size_t n = lexer->position - start + 1;
-    token.value = (char*)malloc(n);
-    memset(token.value, c, 1);
-    memcpy(token.value+1, lexer->input+start, n-1);
+    memset(token, 0, sizeof(struct Token));
+    token->type = lexer->type;
+    token->value = (char*)calloc(lexer->len, sizeof(char));
 
+    if (!token->value) {
+        free(token);
+        return NULL;
+    }
+
+    strncpy(token->value, lexer->input + lexer->start, lexer->len);
     return token;
 }
 
-bool is_letter(char c) {
+void token_free(struct Token* token) {
+    free(token->value);
+    free(token);
+}
+
+bool is_whitespace(char c) {
+    return c == ' ' || c == '\n' || c == '\t' || c == '\r';
+}
+
+bool is_alpha(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-void free_lexer(Lexer* lexer) {
-    free(lexer);
-}
-
-void free_token(Token token) {
-    free(token.value);
 }

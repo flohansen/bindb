@@ -1,69 +1,99 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <stdlib.h>
 #include <stdbool.h>
 
-typedef enum {
+/**
+ * Enum values describing the type of a token.
+ */
+enum TokenType {
     TOKEN_LITERAL,
-    TOKEN_ASTERISK,
+    TOKEN_OPERATOR,
     TOKEN_UNKNOWN,
-} TokenType;
+};
 
-typedef struct {
-    TokenType type;
+/**
+ * The `Token` struct represents one token of a lexical analysis.
+ */
+struct Token {
+    enum TokenType type;
     char* value;
-} Token;
+};
 
-typedef struct {
+/**
+ * The `Lexer` struct holds information about the input string and the current
+ * token. It acts like an iterator over the input string identifying tokens.
+ */
+struct Lexer {
     char* input;
-    size_t position;
-    size_t length;
-} Lexer;
+    unsigned int input_len;
+    unsigned int pos;
+    enum TokenType type;
+    unsigned int start;
+    unsigned int len;
+};
 
 /**
- * Creates a new lexer instance.
+ * Creates a new instance of a lexer using the input string that it should
+ * tokenize. You need to call `lexer_free` after you are done with it.
  */
-Lexer* create_lexer(char* input);
+struct Lexer* create_lexer(const char* input);
 
 /**
- * Retrieves the next character from the lexer input.
+ * Frees the memory used by the lexer.
  */
-bool lexer_next_char(Lexer* lexer, char* c);
+void lexer_free(struct Lexer* lexer);
 
 /**
- * Peeks at the next character in the lexer input without advancing the position.
+ * Moves the lexer to the next token of the input string and returns true, if it
+ * read one, false otherwise.
  */
-bool lexer_peek_char(Lexer* lexer, char* c);
+bool lexer_next(struct Lexer* lexer);
 
 /**
- * Retrieves the next token from the lexer.
+ * Tries to read the next character of the input string of the lexer. If there
+ * is a next character, the lexer position is being incremented and the function
+ * returns `true`, otherwise `false`.
  */
-bool lexer_next(Lexer* lexer, Token* token);
+bool lexer_next_char(struct Lexer* lexer, char* c);
 
 /**
- * Sets the type and value of a token.
+ * Tries to read the next character of the input string of the lexer. If there
+ * is a next character without updating the position. Returns `true`, otherwise
+ * `false`.
  */
-void set_token(Token* token, TokenType type, char c);
+bool lexer_peek_char(struct Lexer* lexer, char* c);
 
 /**
- * Parses a literal from the lexer input.
+ * Reads the next character as a token and sets the type of it.
  */
-Token lexer_parse_literal(Lexer* lexer, char c);
+void lexer_parse_char(struct Lexer* lexer, enum TokenType type);
 
 /**
- * Checks if the character is a letter [a-zA-Z].
+ * Reads from the token as a string literal from the input string.
  */
-bool is_letter(char c);
+void lexer_parse_literal(struct Lexer* lexer);
 
 /**
- * Frees memory of the lexer.
+ * Returns the current token of the lexer. You need to call `token_free` to
+ * release resources.
  */
-void free_lexer(Lexer* lexer);
+struct Token* lexer_token(struct Lexer* lexer);
 
 /**
- * Frees memory of the token.
+ * Frees the memory used by the token.
  */
-void free_token(Token token);
+void token_free(struct Token* token);
+
+/**
+ * Checks whether the given character is a whitespace character (like space, new
+ * line, ...).
+ */
+bool is_whitespace(char c);
+
+/**
+ * Checks whether the given character is an alpha character.
+ */
+bool is_alpha(char c);
 
 #endif // LEXER_H

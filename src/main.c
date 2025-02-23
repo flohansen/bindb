@@ -1,16 +1,26 @@
 #include "lexer.h"
+#include <stdlib.h>
 #include <stdio.h>
 
 int main() {
     char* input = "SELECT * FROM customers";
-    Lexer* lexer = create_lexer(input);
-
-    Token token;
-    while (lexer_next(lexer, &token)) {
-        printf("%d: '%s'\n", token.type, token.value);
-        free_token(token);
+    struct Lexer* lexer = create_lexer(input);
+    if (!lexer) {
+        printf("Could not create lexer");
+        return EXIT_FAILURE;
     }
 
-    free_lexer(lexer);
-    return 0;
+    while (lexer_next(lexer)) {
+        struct Token* token = lexer_token(lexer);
+        if (!token) {
+            printf("Could not get token");
+            return EXIT_FAILURE;
+        }
+
+        printf("%d: '%s'\n", token->type, token->value);
+        token_free(token);
+    }
+
+    lexer_free(lexer);
+    return EXIT_SUCCESS;
 }
